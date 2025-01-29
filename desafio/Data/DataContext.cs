@@ -16,42 +16,40 @@ namespace desafio.Data
         {
             // Configuração do relacionamento entre Payment e Wallet
             modelBuilder.Entity<Payment>()
-                .HasOne(p => p.FromWallet)
-                .WithMany(w => w.Payments)
-                .HasForeignKey(p => p.FromWalletId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.FromWallet) // Payment tem uma Wallet de origem
+                .WithMany(w => w.Payments) // Wallet tem muitos Payments
+                .HasForeignKey(p => p.FromWalletId) // Chave estrangeira
+                .OnDelete(DeleteBehavior.Restrict); // Comportamento de exclusão
 
             modelBuilder.Entity<Payment>()
-                .HasOne(p => p.ToWallet)
-                .WithMany()
-                .HasForeignKey(p => p.ToWalletId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.ToWallet) // Payment tem uma Wallet de destino
+                .WithMany() // Wallet não tem uma propriedade de navegação inversa
+                .HasForeignKey(p => p.ToWalletId) // Chave estrangeira
+                .OnDelete(DeleteBehavior.Restrict); // Comportamento de exclusão
 
-            // Seed data para Wallet
+            // Seed data (opcional)
             modelBuilder.Entity<Wallet>().HasData(
                 new Wallet { Id = 1, UserId = "user1", Balance = 1000 },
                 new Wallet { Id = 2, UserId = "user2", Balance = 500 }
             );
 
-            // Seed data para Payment
             modelBuilder.Entity<Payment>().HasData(
                 new Payment
                 {
                     Id = 1,
                     Amount = 100,
-                    Date = DateTime.UtcNow,
-                    FromWalletId = 1, // Transferência da carteira 1 para a carteira 2
+                    FromWalletId = 1,
                     ToWalletId = 2
                 },
                 new Payment
                 {
                     Id = 2,
                     Amount = 50,
-                    Date = DateTime.UtcNow.AddDays(-1),
-                    FromWalletId = 2, // Transferência da carteira 2 para a carteira 1
+                    FromWalletId = 2,
                     ToWalletId = 1
                 }
             );
         }
     }
-}
+
+    }

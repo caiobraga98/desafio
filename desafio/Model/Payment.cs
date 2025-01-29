@@ -7,7 +7,7 @@ namespace desafio.Model
         [Key]
         public int Id { get; set; } // Chave primária
         public decimal Amount { get; set; } // Valor da transação
-        public DateTime Date { get; set; } // Data da transação
+        //public DateTime Date { get; set; } // Data da transação
 
         // Relacionamento com Wallet (carteira de origem)
         public int? FromWalletId { get; set; } // Chave estrangeira (opcional)
