@@ -7,43 +7,46 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using desafio.Data;
 using desafio.Model;
+using desafio.Repository;
+using Microsoft.AspNetCore.Authorization;
 
 namespace desafio.Controllers
 {
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class WalletsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IWalletRepository _walletRepository;
 
-        public WalletsController(DataContext context)
+        public WalletsController(IWalletRepository walletRepository)
         {
-            _context = context;
+            _walletRepository = walletRepository;
         }
 
         // GET: api/Wallets
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Wallet>>> GetWallets()
         {
-            return await _context.Wallets.ToListAsync();
+            var wallets = await _walletRepository.GetAll();
+            return Ok(wallets); // Return Ok with the list
         }
 
         // GET: api/Wallets/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Wallet>> GetWallet(int id)
         {
-            var wallet = await _context.Wallets.FindAsync(id);
+            var wallet = await _walletRepository.GetWalletById(id);
 
             if (wallet == null)
             {
                 return NotFound();
             }
 
-            return wallet;
+            return Ok(wallet); // Return Ok with the wallet
         }
 
         // PUT: api/Wallets/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutWallet(int id, Wallet wallet)
         {
@@ -52,35 +55,30 @@ namespace desafio.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(wallet).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _walletRepository.Update(wallet);
+                return NoContent();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!WalletExists(id))
+                var existingWallet = await _walletRepository.GetWalletById(id);
+                if (existingWallet == null)
                 {
                     return NotFound();
                 }
                 else
                 {
-                    throw;
+                    throw; // Re-throw the exception if the wallet exists
                 }
             }
-
-            return NoContent();
         }
 
         // POST: api/Wallets
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Wallet>> PostWallet(Wallet wallet)
         {
-            _context.Wallets.Add(wallet);
-            await _context.SaveChangesAsync();
-
+            await _walletRepository.CreateWallet(wallet);
             return CreatedAtAction("GetWallet", new { id = wallet.Id }, wallet);
         }
 
@@ -88,21 +86,15 @@ namespace desafio.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWallet(int id)
         {
-            var wallet = await _context.Wallets.FindAsync(id);
+            var wallet = await _walletRepository.GetWalletById(id);
             if (wallet == null)
             {
                 return NotFound();
             }
 
-            _context.Wallets.Remove(wallet);
-            await _context.SaveChangesAsync();
-
+            await _walletRepository.Remove(id);
             return NoContent();
-        }
-
-        private bool WalletExists(int id)
-        {
-            return _context.Wallets.Any(e => e.Id == id);
         }
     }
 }
+
